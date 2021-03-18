@@ -14,6 +14,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings({"unused","OptionalGetWithoutIsPresent"})
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 public class TaskListRepositoryTest {
@@ -98,7 +99,7 @@ public class TaskListRepositoryTest {
         sharedWith.add(u2);
 
 
-        TaskList tl = TaskList.builder()
+        return TaskList.builder()
                 .listName("list1")
                 .listDescription("desc1")
                 .tasks(tasks)
@@ -107,6 +108,5 @@ public class TaskListRepositoryTest {
                 .build()
                 .toBuilder()
                 .build();
-        return tl;
     }
 }

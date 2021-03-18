@@ -12,6 +12,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SuppressWarnings("unused")
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 public class UserRepositoryTest extends TestCase {
@@ -19,14 +20,13 @@ public class UserRepositoryTest extends TestCase {
     @Autowired
     private UserRepository userRepository;
 
-    private static final String test_user = "test_user";
+    private static final String TEST_USER = "test_user";
     private static User user;
 
 
     @Test
     public void shouldCreateUser() {
-        User temp_user = User.builder().name(test_user).build().toBuilder().build();
-        user = userRepository.saveAndFlush(temp_user);
+        createUser();
         assertThat(user).isNotNull();
     }
 
@@ -49,9 +49,14 @@ public class UserRepositoryTest extends TestCase {
     }
 
     @Test
-    public void shouldDeleteUser() {
+    public void shouldDeleteUserById() {
         userRepository.deleteById(user.getId());
         assertThat(userRepository.findById(user.getId())).isEmpty();
+    }
+
+    public void createUser() {
+        User temp_user = User.builder().name(TEST_USER).build().toBuilder().build();
+        user = userRepository.saveAndFlush(temp_user);
     }
 
 }

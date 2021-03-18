@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@SuppressWarnings({"unused", "OptionalGetWithoutIsPresent"})
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -36,7 +37,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class ApiControllerTest extends TestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiControllerTest.class);
+    private static final String SHARE_WITH_USER = "user3";
+    private static final String RANDOM_USERNAME = "random_username";
     private static TaskList taskList;
+    private static User user;
 
     @Autowired
     private MockMvc mockMvc;
@@ -46,41 +50,104 @@ public class ApiControllerTest extends TestCase {
     private TaskListRepository taskListRepository;
 
     @Test
+    @Order(0)
     public void shouldReturnDefaultMessage() throws Exception {
-        this.mockMvc.perform(get("/")).andDo(print()).andExpect(status().isOk())
-                .andExpect(content().string(containsString("Hello, World")));
-    }
-
-    @Test
-    public void shouldReturnUserById() throws Exception {
-        this.mockMvc.perform(get("/api/user/id/1")).andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("name").value("user1"));
-    }
-
-    @Test
-    public void shouldReturnUserByIdNotFound() throws Exception {
-        this.mockMvc.perform(get("/api/user/id/9999")).andDo(print())
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    public void shouldReturnUserByName() throws Exception {
-        this.mockMvc.perform(get("/api/user/name/user1")).andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("name").value("user1"));
-    }
-
-    @Test
-    public void shouldReturnUserByNameNotFound() throws Exception {
-        this.mockMvc.perform(get("/api/user/name/9999")).andDo(print())
-                .andExpect(status().isNotFound());
+        this.mockMvc.perform(get("/"))
+                .andDo(print())
+                .andExpect(status().isIAmATeapot())
+                .andExpect(content().string(containsString("I'm a teapot.")));
     }
 
     @Test
     @Order(1)
+    public void shouldCreateUser() throws Exception {
+        User tempUser = User.builder().name(RANDOM_USERNAME).build().toBuilder().build();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
+        ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
+        String requestJson = ow.writeValueAsString(tempUser);
+
+        MvcResult mvcResult = this.mockMvc.perform(MockMvcRequestBuilders.post("/api/user/create")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String json = mvcResult.getResponse().getContentAsString();
+        user = new ObjectMapper().readValue(json, User.class);
+        logger.info(user.toString());
+    }
+
+    @Test
+    @Order(2)
+    public void shouldReturnUserById() throws Exception {
+        this.mockMvc.perform(get("/api/user/id/1/get")).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("name").value("user1"));
+    }
+
+    @Test
+    @Order(3)
+    public void shouldReturnUserByIdNotFound() throws Exception {
+        this.mockMvc.perform(get("/api/user/id/9999/get")).andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Order(4)
+    public void shouldReturnUserByName() throws Exception {
+        this.mockMvc.perform(get("/api/user/name/" + RANDOM_USERNAME + "/get")).andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("name").value(RANDOM_USERNAME));
+    }
+
+    @Test
+    @Order(5)
+    public void shouldReturnUserByNameNotFound() throws Exception {
+        this.mockMvc.perform(get("/api/user/name/9999/get")).andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Order(6)
+    public void shouldDeleteUserById() throws Exception {
+        this.mockMvc.perform(get("/api/user/id/" + user.getId() + "/delete"))
+                .andDo(print())
+                .andExpect(status().isOk());
+        assertThat(userRepository.findById(user.getId())).isEmpty();
+    }
+
+    @Test
+    @Order(7)
+    public void shouldReturnDeleteUserByIdNotFound() throws Exception {
+        this.mockMvc.perform(get("/api/user/id/" + user.getId() + "/delete"))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Order(8)
+    public void shouldDeleteUserByName() throws Exception {
+        shouldCreateUser();
+        this.mockMvc.perform(get("/api/user/name/" + RANDOM_USERNAME + "/delete"))
+                .andDo(print())
+                .andExpect(status().isOk());
+        assertThat(userRepository.findById(user.getId())).isEmpty();
+    }
+
+    @Test
+    @Order(9)
+    public void shouldReturnDeleteUserByNameNotFound() throws Exception {
+        this.mockMvc.perform(get("/api/user/name/" + RANDOM_USERNAME + "/delete"))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Order(11)
     public void shouldCreateTaskList() throws Exception {
         TaskList tempTaskList = createTaskList();
         ObjectMapper mapper = new ObjectMapper();
@@ -101,7 +168,7 @@ public class ApiControllerTest extends TestCase {
     }
 
     @Test
-    @Order(2)
+    @Order(12)
     public void shouldReturnTaskListById() throws Exception {
         MvcResult mvcResult = this.mockMvc.perform(get("/api/taskList/get/id/" + taskList.getId()))
                 .andDo(print())
@@ -111,11 +178,17 @@ public class ApiControllerTest extends TestCase {
 
         String json = mvcResult.getResponse().getContentAsString();
         TaskList responseTaskList = new ObjectMapper().readValue(json, TaskList.class);
-        assert responseTaskList.equals(taskList);
+
+        assertThat(responseTaskList).isEqualTo(taskList);
+        assertThat(responseTaskList.getTasks()).hasSize(2);
+        assertThat(responseTaskList.getOwner()).isNotNull();
+        assertThat(responseTaskList.getCreatedAt()).isNotNull();
+        assertThat(responseTaskList.getSharedWith()).hasSize(1);
+        assertThat(responseTaskList.getSharedWith().stream().filter(user -> "user2".equals(user.getName())).findFirst().orElse(null)).isNotNull();
     }
 
     @Test
-    @Order(3)
+    @Order(13)
     public void shouldReturnTaskListsByUser() throws Exception {
         MvcResult mvcResult = this.mockMvc.perform(get("/api/taskList/get/user/" + taskList.getOwner().getName()))
                 .andDo(print())
@@ -130,16 +203,57 @@ public class ApiControllerTest extends TestCase {
     }
 
     @Test
-    @Order(4)
+    @Order(14)
+    public void shouldShareWithUser() throws Exception {
+        this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/share/" + SHARE_WITH_USER))
+                .andDo(print())
+                .andExpect(status().isOk());
+        List<User> sharedWith = taskListRepository.findById(taskList.getId()).get().getSharedWith();
+        assertThat(sharedWith).hasSize(2);
+        assertThat(sharedWith.stream().filter(user -> SHARE_WITH_USER.equals(user.getName())).findFirst().orElse(null)).isNotNull();
+    }
+
+    @Test
+    @Order(15)
+    public void shouldReturnShareWithUserListNotFound() throws Exception {
+        this.mockMvc.perform(get("/api/taskList/9999/share/" + SHARE_WITH_USER))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(containsString("TaskList not found")));
+    }
+
+    @Test
+    @Order(16)
+    public void shouldReturnShareWithUserUserNotFound() throws Exception {
+        this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/share/" + RANDOM_USERNAME))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(containsString("User not found")));
+    }
+
+    @Test
+    @Order(17)
+    public void shouldUnShareWithUser() throws Exception {
+        this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/unShare/" + SHARE_WITH_USER))
+                .andDo(print())
+                .andExpect(status().isOk());
+        List<User> sharedWith = taskListRepository.findById(taskList.getId()).get().getSharedWith();
+        assertThat(sharedWith).hasSize(1);
+        assertThat(sharedWith.stream().filter(user -> SHARE_WITH_USER.equals(user.getName())).findFirst().orElse(null)).isNull();
+    }
+
+
+    @Test
+    @Order(19)
     public void shouldDeleteTaskListById() throws Exception {
-        this.mockMvc.perform(get("/api/taskList/delete/id/" + taskList.getId()))
+        this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/delete"))
                 .andDo(print())
                 .andExpect(status().isOk());
         assertThat(taskListRepository.findById(taskList.getId())).isEmpty();
     }
 
     @Test
-    @Order(5)
+    @Order(20)
     public void shouldReturnDeleteNotFound() throws Exception {
         this.mockMvc.perform(get("/api/taskList/delete/id/" + taskList.getId()))
                 .andDo(print())
@@ -148,7 +262,7 @@ public class ApiControllerTest extends TestCase {
     }
 
     @Test
-    @Order(6)
+    @Order(21)
     public void shouldNotFindTaskListsByUser() throws Exception {
         this.mockMvc.perform(get("/api/taskList/get/user/" + "some_random_username"))
                 .andDo(print())
