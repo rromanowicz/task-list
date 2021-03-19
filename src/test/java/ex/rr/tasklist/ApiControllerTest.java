@@ -244,7 +244,7 @@ public class ApiControllerTest extends TestCase {
 
 
     @Test
-    @Order(19)
+    @Order(18)
     public void shouldDeleteTaskListById() throws Exception {
         this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/delete"))
                 .andDo(print())
@@ -253,7 +253,7 @@ public class ApiControllerTest extends TestCase {
     }
 
     @Test
-    @Order(20)
+    @Order(29)
     public void shouldReturnDeleteNotFound() throws Exception {
         this.mockMvc.perform(get("/api/taskList/delete/id/" + taskList.getId()))
                 .andDo(print())
@@ -262,7 +262,7 @@ public class ApiControllerTest extends TestCase {
     }
 
     @Test
-    @Order(21)
+    @Order(20)
     public void shouldNotFindTaskListsByUser() throws Exception {
         this.mockMvc.perform(get("/api/taskList/get/user/" + "some_random_username"))
                 .andDo(print())

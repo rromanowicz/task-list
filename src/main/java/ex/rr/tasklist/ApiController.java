@@ -25,6 +25,8 @@ public class ApiController {
     @Autowired
     private TaskListRepository taskListRepository;
     @Autowired
+    private taskRepository taskRepository;
+    @Autowired
     private UserRepository userRepository;
 
     @GetMapping("/")
@@ -151,6 +153,27 @@ public class ApiController {
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
             }
+        }
+    }
+
+    @PostMapping("/api/taskList/{id}/task/add")
+    public ResponseEntity<Task> addTask(@PathVariable Long id, @RequestBody Task task){
+        return ResponseEntity.status(HttpStatus.OK).body(taskRepository.save(task));
+    }
+
+    @GetMapping("/api/taskList/{id}/task/getAll")
+    public ResponseEntity<List<Task>> getTaskListTasks(@PathVariable Long id){
+        return ResponseEntity.status(HttpStatus.OK).body(taskRepository.findAllByTaskListId(id));
+    }
+
+    @GetMapping("/api/taskList/{id}/task/{id}/delete")
+    public ResponseEntity<Void> deleteTask(@PathVariable Long listId, @PathVariable Long taskId){
+        Optional<Task> task = taskRepository.getTaskIfBelongsToList(listId, taskId);
+        if(task.isPresent()) {
+            taskRepository.deleteById(taskId);
+            return ResponseEntity.status(HttpStatus.OK).build();
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 

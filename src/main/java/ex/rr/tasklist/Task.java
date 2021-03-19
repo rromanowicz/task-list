@@ -17,7 +17,7 @@ public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "task_id_sequence")
     @SequenceGenerator(name = "task_id_sequence", sequenceName = "TASK_ID_SEQ")
-    private Integer id;
+    private Long id;
     private String taskName;
     private Boolean completed;
     @Builder.ObtainVia(method = "createdAtChecker")
