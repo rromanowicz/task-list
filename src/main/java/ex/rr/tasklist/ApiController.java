@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +27,7 @@ public class ApiController {
     @Autowired
     private TaskListRepository taskListRepository;
     @Autowired
-    private taskRepository taskRepository;
+    private TaskRepository taskRepository;
     @Autowired
     private UserRepository userRepository;
 
@@ -72,10 +74,10 @@ public class ApiController {
     @GetMapping("/api/user/name/{name}/delete")
     public ResponseEntity<User> deleteUserByName(@PathVariable("name") String name) {
         Optional<User> user = userRepository.findByName(name);
-        if(user.isPresent()) {
+        if (user.isPresent()) {
             userRepository.deleteById(user.get().getId());
             return ResponseEntity.status(HttpStatus.OK).build();
-        } else  {
+        } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
@@ -157,23 +159,83 @@ public class ApiController {
     }
 
     @PostMapping("/api/taskList/{id}/task/add")
-    public ResponseEntity<Task> addTask(@PathVariable Long id, @RequestBody Task task){
-        return ResponseEntity.status(HttpStatus.OK).body(taskRepository.save(task));
+    public ResponseEntity<Task> addTask(@PathVariable Long id, @RequestBody Task task) {
+        Optional<TaskList> taskList = taskListRepository.findById(id);
+        if (taskList.isPresent()) {
+            TaskList list1 = taskList.get();
+            list1.getTasks().add(task);
+            TaskList updatedTaskList = taskListRepository.save(list1);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(Collections.max(updatedTaskList.getTasks(), Comparator.comparing(Task::getCreatedAt)));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
     @GetMapping("/api/taskList/{id}/task/getAll")
-    public ResponseEntity<List<Task>> getTaskListTasks(@PathVariable Long id){
+    public ResponseEntity<List<Task>> getTaskListTasks(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(taskRepository.findAllByTaskListId(id));
     }
 
-    @GetMapping("/api/taskList/{id}/task/{id}/delete")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long listId, @PathVariable Long taskId){
+    @GetMapping("/api/taskList/{listId}/task/{taskId}/delete")
+    public ResponseEntity<Void> deleteTask(@PathVariable Long listId, @PathVariable Long taskId) {
         Optional<Task> task = taskRepository.getTaskIfBelongsToList(listId, taskId);
-        if(task.isPresent()) {
+        if (task.isPresent()) {
             taskRepository.deleteById(taskId);
             return ResponseEntity.status(HttpStatus.OK).build();
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    @GetMapping("/api/taskList/{listId}/task/{taskId}/completed/{completed}")
+    public ResponseEntity<Void> toggleTaskCompleted(@PathVariable Long listId, @PathVariable Long taskId, @PathVariable boolean completed) {
+        Optional<Task> task = taskRepository.getTaskIfBelongsToList(listId, taskId);
+        if (task.isPresent()) {
+            Task tempTask = task.get();
+            if (completed) {
+                tempTask.setCompleted(true);
+                tempTask.setCompletedAt(System.currentTimeMillis());
+                tempTask.setUpdatedAt(System.currentTimeMillis());
+            } else {
+                tempTask.setCompleted(false);
+                tempTask.setCompletedAt(null);
+                tempTask.setUpdatedAt(System.currentTimeMillis());
+            }
+            taskRepository.save(tempTask);
+            return ResponseEntity.status(HttpStatus.OK).build();
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+    @PostMapping("/api/taskList/{listId}/update")
+    public ResponseEntity<Void> updateTaskList(@PathVariable Long listId, @RequestBody TaskList taskList) {
+        if (listId.equals(taskList.getId())) {
+            if (taskListRepository.existsById(listId)) {
+                taskList.setUpdatedAt(System.currentTimeMillis());
+                taskListRepository.save(taskList);
+                return ResponseEntity.status(HttpStatus.OK).build();
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+    }
+
+    @PostMapping("/api/taskList/{listId}/task/{taskId}/update")
+    public ResponseEntity<Void> updateTaskListTask(@PathVariable Long listId, @PathVariable Long taskId, @RequestBody Task task) {
+        if (taskId.equals(task.getId()) && taskRepository.getTaskIfBelongsToList(listId, taskId).isPresent()) {
+            if (taskRepository.existsById(listId)) {
+                task.setUpdatedAt(System.currentTimeMillis());
+                taskRepository.save(task);
+                return ResponseEntity.status(HttpStatus.OK).build();
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
 

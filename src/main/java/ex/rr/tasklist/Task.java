@@ -19,6 +19,7 @@ public class Task {
     @SequenceGenerator(name = "task_id_sequence", sequenceName = "TASK_ID_SEQ")
     private Long id;
     private String taskName;
+    @Builder.ObtainVia(method = "completedChecker")
     private Boolean completed;
     @Builder.ObtainVia(method = "createdAtChecker")
     private Long createdAt;
@@ -27,8 +28,12 @@ public class Task {
     private Long completedAt;
     private Long dueDate;
 
-    private Long createdAtChecker(){
+    private Long createdAtChecker() {
         return createdAt == null ? System.currentTimeMillis() : createdAt;
+    }
+
+    private Boolean completedChecker() {
+        return completed != null;
     }
 
 }

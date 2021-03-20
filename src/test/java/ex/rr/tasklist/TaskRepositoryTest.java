@@ -26,7 +26,7 @@ public class TaskRepositoryTest {
     @Autowired
     private TaskListRepository taskListRepository;
     @Autowired
-    private taskRepository taskRepository;
+    private TaskRepository taskRepository;
 
 
     @Test
@@ -38,7 +38,7 @@ public class TaskRepositoryTest {
 
     @Test
     @Order(1)
-    void shouldCreateTaskList(){
+    void shouldCreateTaskList() {
         taskList = createTaskList();
         assertThat(taskList).isNotNull();
     }
@@ -72,9 +72,8 @@ public class TaskRepositoryTest {
         assertThat(task).isEmpty();
     }
 
-
     @Test
-    @Order(9)
+    @Order(99)
     public void shouldDeleteTaskList() {
         taskListRepository.deleteById(taskList.getId());
         assertThat(taskRepository.findById(taskList.getId())).isEmpty();

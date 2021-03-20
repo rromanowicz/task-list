@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface taskRepository extends JpaRepository<Task, Long> {
+public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query(value = "SELECT t.* FROM task t, task_list_tasks tlt WHERE t.id=tlt.tasks_id AND tlt.task_list_id=?1", nativeQuery = true)
     List<Task> findAllByTaskListId(Long id);
