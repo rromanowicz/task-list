@@ -4,12 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.hibernate.annotations.Cascade;
 
 import javax.persistence.*;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+
+import static org.hibernate.annotations.CascadeType.ALL;
 
 @Entity
 @Data
@@ -31,12 +32,27 @@ public class User {
     @Builder.ObtainVia(method = "createdAtChecker")
     private Long createdAt;
 
+    @Builder.ObtainVia(method = "roleChecker")
+    @OneToMany(targetEntity = Role.class)
+    @Cascade(ALL)
+    private List<Role> roles;
+
+    @OneToMany(targetEntity = HashToken.class)
+    @Cascade(ALL)
+    private List<HashToken> hashTokens;
+
+
     private Long createdAtChecker() {
         return createdAt == null ? System.currentTimeMillis() : createdAt;
     }
 
-    private String role;
+    private List<Role> roleChecker() {
+        return roles == null || roles.isEmpty() ? initRoles() : roles;
+    }
 
+    private List<Role> initRoles() {
+        return Collections.singletonList(Role.builder().role("USER").build().toBuilder().build());
+    }
 
 
 }

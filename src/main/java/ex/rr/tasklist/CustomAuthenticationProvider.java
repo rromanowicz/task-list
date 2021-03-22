@@ -26,7 +26,9 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         if (user.isPresent()) {
             if (user.get().getPassword().equals(authentication.getCredentials().toString())) {
                 List<GrantedAuthority> authorities = new ArrayList<>();
-                authorities.add(new SimpleGrantedAuthority(user.get().getRole()));
+                for (Role role : user.get().getRoles()) {
+                    authorities.add(new SimpleGrantedAuthority(role.getRole()));
+                }
 
                 return new UsernamePasswordAuthenticationToken(user, authentication.getCredentials(), authorities);
             } else {

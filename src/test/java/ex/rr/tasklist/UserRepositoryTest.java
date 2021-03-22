@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,7 +70,12 @@ public class UserRepositoryTest extends TestCase {
     }
 
     public void createUser(String username) {
-        User temp_user = User.builder().username(username).build().toBuilder().build();
+        User temp_user = User.builder()
+                .username(username)
+                .password("password")
+                .hashTokens(Collections.singletonList(HashToken.builder().token("asd").build()))
+                .roles(Collections.singletonList(Role.builder().role("USER").build()))
+                .build().toBuilder().build();
         user = userRepository.saveAndFlush(temp_user);
     }
 

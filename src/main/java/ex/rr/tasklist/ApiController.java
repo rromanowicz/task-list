@@ -9,7 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 @SuppressWarnings("unused")
 @Controller
@@ -27,6 +30,17 @@ public class ApiController {
     @Autowired
     private UserRepository userRepository;
 
+
+    @GetMapping("/test")
+    public ResponseEntity<User> test(){
+        User tempUser = User.builder().username("random_user")
+                .password("random_password")
+                .hashTokens(Collections.singletonList(HashToken.builder().token("adsff9g876g").build().toBuilder().build()))
+                .build().toBuilder().build();
+        return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).body(userRepository.save(tempUser));
+    }
+
+
     @GetMapping("/")
     public ResponseEntity<String> root(
     ) {
@@ -38,9 +52,7 @@ public class ApiController {
             @RequestHeader("hash") String hash,
             @RequestBody User user
     ) {
-        logger.error(user.toString());
         try {
-            logger.error(user.toString());
             if (!userRepository.findByUsername(user.getUsername()).isPresent()) {
                 return ResponseEntity.status(HttpStatus.CREATED).body(userRepository.saveAndFlush(user));
             } else {
@@ -319,14 +331,8 @@ public class ApiController {
     }
 
     private boolean validateHeader(String hash) {
-        if (userHash == null) userHash = getUserHashList();
+        if (userHash == null) userHash = userRepository.findActiveTokens();
         return !userHash.contains(hash);
-    }
-
-    private List<String> getUserHashList() { //TODO
-        List<String> tempList = new ArrayList<>();
-        tempList.add("adsff9g876g");
-        return tempList;
     }
 
 }

@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import junit.framework.TestCase;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +18,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -38,13 +38,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class ApiControllerTest extends TestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiControllerTest.class);
-    private static final String SHARE_WITH_USER = "user3";
+    private static final String RUN_USER = "admin";
+    private static final String RUN_PASSWORD = "password";
+    private static final String SHARE_WITH_USER = "admin";
     private static final String RANDOM_USERNAME = "random_username";
     private static final String RANDOM_TASK_NAME = "random_task_name";
     public static final String USER_HASH = "adsff9g876g";
-    public static final String RANDOM_USER_HASH = "adsff9g876g";
+    public static final String ADMIN_HASH = "q5476nsujsb4zert";
+    public static final String RANDOM_USER_HASH = "asdzx325q3tag";
+    public static final Role ROLE_USER = Role.builder().role("USER").build().toBuilder().build();
+    public static final Role ROLE_ADMIN = Role.builder().role("ADMIN").build().toBuilder().build();
     private static final String RANDOM_PASSWORD = "password";
-    public static final String AUTH_CREDENTIALS = "Basic dXNlcjE6cGFzc3dvcmQ=";
+    public static final String AUTH_CREDENTIALS = "Basic " + Base64.getEncoder().encodeToString((RUN_USER + ":" + RUN_PASSWORD).getBytes());
+    //    public static final String AUTH_CREDENTIALS = "Basic dXNlcjE6cGFzc3dvcmQ=";
     private static TaskList taskList;
     private static User user;
     private static Task task;
@@ -60,6 +66,28 @@ public class ApiControllerTest extends TestCase {
 
     @Test
     @Order(0)
+    public void setup() {
+        List<String> users = userRepository.findAll().stream().map(User::getUsername).collect(Collectors.toList());
+
+        addDbUser(users, "admin", ROLE_ADMIN, ADMIN_HASH);
+        addDbUser(users, "user1", ROLE_USER, USER_HASH);
+        addDbUser(users, "user2", ROLE_USER, USER_HASH);
+
+        assertThat(userRepository.findAll()).hasSizeGreaterThan(2);
+    }
+
+    private void addDbUser(List<String> dbUsers, String username, Role role, String hashToken) {
+        if (!dbUsers.contains(username))
+            userRepository.saveAndFlush(User.builder()
+                    .username(username)
+                    .password(RANDOM_PASSWORD)
+                    .roles(Collections.singletonList(role))
+                    .hashTokens(Collections.singletonList(HashToken.builder().token(RANDOM_USER_HASH).build().toBuilder().build()))
+                    .build().toBuilder().build());
+    }
+
+    @Test
+    @Order(0)
     public void shouldReturnDefaultMessage() throws Exception {
         this.mockMvc.perform(get("/"))
                 .andDo(print())
@@ -70,7 +98,11 @@ public class ApiControllerTest extends TestCase {
     @Test
     @Order(1)
     public void shouldCreateUser() throws Exception {
-        User tempUser = User.builder().username(RANDOM_USERNAME).password(RANDOM_PASSWORD).role("USER").build().toBuilder().build();
+        User tempUser = User.builder()
+                .username(RANDOM_USERNAME)
+                .password(RANDOM_PASSWORD)
+                .hashTokens(Collections.singletonList(HashToken.builder().token(RANDOM_USER_HASH).build().toBuilder().build()))
+                .build().toBuilder().build();
 
         MvcResult mvcResult = this.mockMvc.perform(post("/api/user/create")
                 .header("hash", USER_HASH)
@@ -107,7 +139,7 @@ public class ApiControllerTest extends TestCase {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("username").value("user1"));
+                .andExpect(jsonPath("username").value("admin"));
     }
 
     @Test
