@@ -14,7 +14,7 @@ public interface TaskListRepository extends JpaRepository<TaskList, Long> {
 
     List<TaskList> findAll();
 
-    @Query(value = "SELECT tl.* FROM task_list tl JOIN user u ON tl.owner_id=u.id AND u.name=?1 UNION SELECT tl.* FROM task_list tl JOIN task_list_shared_with tlsw ON tl.id =tlsw.task_list_id JOIN user u ON tlsw.shared_with_id =u.id AND u.name=?1", nativeQuery = true)
+    @Query(value = "SELECT tl.* FROM task_list tl JOIN user u ON tl.owner_id=u.id AND u.username=?1 UNION SELECT tl.* FROM task_list tl JOIN task_list_shared_with tlsw ON tl.id =tlsw.task_list_id JOIN user u ON tlsw.shared_with_id =u.id AND u.username=?1", nativeQuery = true)
     List<TaskList> findAllByUser(String user);
 
 }

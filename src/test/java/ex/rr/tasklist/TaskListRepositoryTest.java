@@ -105,8 +105,8 @@ public class TaskListRepositoryTest {
         tasks.add(t1);
         tasks.add(t2);
 
-        User u1 = userRepository.findByName("user1").orElse(null);
-        User u2 = userRepository.findByName("user2").orElse(null);
+        User u1 = userRepository.findByUsername("user1").orElse(null);
+        User u2 = userRepository.findByUsername("user2").orElse(null);
         List<User> sharedWith = new ArrayList<>();
         sharedWith.add(u2);
 

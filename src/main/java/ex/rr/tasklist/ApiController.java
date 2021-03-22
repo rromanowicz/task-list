@@ -28,7 +28,8 @@ public class ApiController {
     private UserRepository userRepository;
 
     @GetMapping("/")
-    public ResponseEntity<String> root() {
+    public ResponseEntity<String> root(
+    ) {
         return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).body("I'm a teapot.");
     }
 
@@ -37,8 +38,10 @@ public class ApiController {
             @RequestHeader("hash") String hash,
             @RequestBody User user
     ) {
+        logger.error(user.toString());
         try {
-            if (!userRepository.findByName(user.getName()).isPresent()) {
+            logger.error(user.toString());
+            if (!userRepository.findByUsername(user.getUsername()).isPresent()) {
                 return ResponseEntity.status(HttpStatus.CREATED).body(userRepository.saveAndFlush(user));
             } else {
                 return ResponseEntity.status(HttpStatus.FOUND).build();
@@ -49,7 +52,7 @@ public class ApiController {
         }
     }
 
-    @GetMapping("/api/user/id/{id}/get")
+    @GetMapping("/api/user/id/{id}")
     public ResponseEntity<User> getUserById(
             @RequestHeader("hash") String hash,
             @PathVariable("id") Long id
@@ -60,13 +63,13 @@ public class ApiController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    @GetMapping("/api/user/name/{name}/get")
+    @GetMapping("/api/user/name/{name}")
     public ResponseEntity<User> getUserByName(
             @RequestHeader("hash") String hash,
             @PathVariable("name") String name
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        Optional<User> user = userRepository.findByName(name);
+        Optional<User> user = userRepository.findByUsername(name);
         return user.map(value -> ResponseEntity.status(HttpStatus.OK).body(value))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
@@ -92,7 +95,7 @@ public class ApiController {
             @PathVariable("name") String name
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        Optional<User> user = userRepository.findByName(name);
+        Optional<User> user = userRepository.findByUsername(name);
         if (user.isPresent()) {
             userRepository.deleteById(user.get().getId());
             return ResponseEntity.status(HttpStatus.OK).build();
@@ -163,7 +166,7 @@ public class ApiController {
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<TaskList> taskList = taskListRepository.findById(id);
-        Optional<User> user = userRepository.findByName(username);
+        Optional<User> user = userRepository.findByUsername(username);
 
         if (taskList.isPresent() && user.isPresent()) {
             TaskList tempTaskList = taskList.get();
@@ -187,7 +190,7 @@ public class ApiController {
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<TaskList> taskList = taskListRepository.findById(id);
-        Optional<User> user = userRepository.findByName(username);
+        Optional<User> user = userRepository.findByUsername(username);
 
         if (taskList.isPresent() && user.isPresent()) {
             TaskList tempTaskList = taskList.get();
@@ -320,7 +323,7 @@ public class ApiController {
         return !userHash.contains(hash);
     }
 
-    private List<String> getUserHashList() {
+    private List<String> getUserHashList() { //TODO
         List<String> tempList = new ArrayList<>();
         tempList.add("adsff9g876g");
         return tempList;

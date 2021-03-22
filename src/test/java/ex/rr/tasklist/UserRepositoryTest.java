@@ -50,7 +50,7 @@ public class UserRepositoryTest extends TestCase {
     @Test
     @Order(4)
     public void shouldReturnUserByName() {
-        Optional<User> temp_user = userRepository.findByName("user1");
+        Optional<User> temp_user = userRepository.findByUsername("user1");
         assertThat(temp_user).isNotNull();
     }
 
@@ -69,7 +69,7 @@ public class UserRepositoryTest extends TestCase {
     }
 
     public void createUser(String username) {
-        User temp_user = User.builder().name(username).build().toBuilder().build();
+        User temp_user = User.builder().username(username).build().toBuilder().build();
         user = userRepository.saveAndFlush(temp_user);
     }
 
