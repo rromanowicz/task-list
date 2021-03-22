@@ -11,3 +11,10 @@ spring:
     driver-class-name: org.sqlite.JDBC
     username: admin
     password: admin
+
+server:
+  port: 8443
+  ssl:
+    key-store: classpath:tasklist.p12
+    key-store-password: password
+    keyStoreType: PKCS12
