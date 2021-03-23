@@ -58,36 +58,36 @@ public class ApiController {
         }
     }
 
-    @GetMapping("/api/user/id/{id}")
+    @GetMapping("/api/user/id/{userId}")
     public ResponseEntity<User> getUserById(
             @RequestHeader("hash") String hash,
-            @PathVariable("id") Long id
+            @PathVariable("userId") Long userId
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        Optional<User> user = userRepository.findById(id);
+        Optional<User> user = userRepository.findById(userId);
         return user.map(value -> ResponseEntity.status(HttpStatus.OK).body(value))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    @GetMapping("/api/user/name/{name}")
+    @GetMapping("/api/user/name/{username}")
     public ResponseEntity<User> getUserByName(
             @RequestHeader("hash") String hash,
-            @PathVariable("name") String name
+            @PathVariable("username") String username
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        Optional<User> user = userRepository.findByUsername(name);
+        Optional<User> user = userRepository.findByUsername(username);
         return user.map(value -> ResponseEntity.status(HttpStatus.OK).body(value))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-    @GetMapping("/api/user/id/{id}/delete")
+    @GetMapping("/api/user/id/{userId}/delete")
     public ResponseEntity<User> deleteUserById(
             @RequestHeader("hash") String hash,
-            @PathVariable("id") Long id
+            @PathVariable("userId") Long userId
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         try {
-            userRepository.deleteById(id);
+            userRepository.deleteById(userId);
             return ResponseEntity.status(HttpStatus.OK).build();
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -95,13 +95,13 @@ public class ApiController {
         }
     }
 
-    @GetMapping("/api/user/name/{name}/delete")
+    @GetMapping("/api/user/name/{username}/delete")
     public ResponseEntity<User> deleteUserByName(
             @RequestHeader("hash") String hash,
-            @PathVariable("name") String name
+            @PathVariable("username") String username
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        Optional<User> user = userRepository.findByUsername(name);
+        Optional<User> user = userRepository.findByUsername(username);
         if (user.isPresent()) {
             userRepository.deleteById(user.get().getId());
             return ResponseEntity.status(HttpStatus.OK).build();
@@ -124,13 +124,13 @@ public class ApiController {
         }
     }
 
-    @GetMapping("/api/taskList/get/id/{id}")
+    @GetMapping("/api/taskList/get/id/{listId}")
     public ResponseEntity<TaskList> getTaskListById(
             @RequestHeader("hash") String hash,
-            @PathVariable Long id
+            @PathVariable("listId") Long listId
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        Optional<TaskList> taskList = taskListRepository.findById(id);
+        Optional<TaskList> taskList = taskListRepository.findById(listId);
         return taskList.map(list -> ResponseEntity.status(HttpStatus.OK).body(list))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
@@ -138,7 +138,7 @@ public class ApiController {
     @GetMapping("/api/taskList/get/user/{username}")
     public ResponseEntity<List<TaskList>> getTaskListById(
             @RequestHeader("hash") String hash,
-            @PathVariable String username
+            @PathVariable("username") String username
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         List<TaskList> taskList = taskListRepository.findAllByUser(username);
@@ -149,14 +149,14 @@ public class ApiController {
         }
     }
 
-    @GetMapping("/api/taskList/{id}/delete")
+    @GetMapping("/api/taskList/{listId}/delete")
     public ResponseEntity<Void> deleteTaskListById(
             @RequestHeader("hash") String hash,
-            @PathVariable Long id
+            @PathVariable("listId") Long listId
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         try {
-            taskListRepository.deleteById(id);
+            taskListRepository.deleteById(listId);
             return ResponseEntity.status(HttpStatus.OK).build();
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -164,14 +164,14 @@ public class ApiController {
         }
     }
 
-    @GetMapping("/api/taskList/{id}/share/{username}")
+    @GetMapping("/api/taskList/{listId}/share/{username}")
     public ResponseEntity<String> shareTaskList(
             @RequestHeader("hash") String hash,
-            @PathVariable Long id,
-            @PathVariable String username
+            @PathVariable("listId") Long listId,
+            @PathVariable("username") String username
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        Optional<TaskList> taskList = taskListRepository.findById(id);
+        Optional<TaskList> taskList = taskListRepository.findById(listId);
         Optional<User> user = userRepository.findByUsername(username);
 
         if (taskList.isPresent() && user.isPresent()) {
@@ -188,14 +188,14 @@ public class ApiController {
         }
     }
 
-    @GetMapping("/api/taskList/{id}/unShare/{username}")
+    @GetMapping("/api/taskList/{listId}/unShare/{username}")
     public ResponseEntity<String> unShareTaskList(
             @RequestHeader("hash") String hash,
-            @PathVariable Long id,
-            @PathVariable String username
+            @PathVariable("listId") Long listId,
+            @PathVariable("username") String username
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        Optional<TaskList> taskList = taskListRepository.findById(id);
+        Optional<TaskList> taskList = taskListRepository.findById(listId);
         Optional<User> user = userRepository.findByUsername(username);
 
         if (taskList.isPresent() && user.isPresent()) {
@@ -212,14 +212,14 @@ public class ApiController {
         }
     }
 
-    @PostMapping("/api/taskList/{id}/task/add")
+    @PostMapping("/api/taskList/{listId}/task/add")
     public ResponseEntity<Task> addTask(
             @RequestHeader("hash") String hash,
-            @PathVariable Long id,
+            @PathVariable("listId") Long listId,
             @RequestBody Task task
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        Optional<TaskList> taskList = taskListRepository.findById(id);
+        Optional<TaskList> taskList = taskListRepository.findById(listId);
         if (taskList.isPresent()) {
             TaskList list1 = taskList.get();
             list1.getTasks().add(task);
@@ -231,20 +231,20 @@ public class ApiController {
         }
     }
 
-    @GetMapping("/api/taskList/{id}/task/getAll")
+    @GetMapping("/api/taskList/{listId}/task/getAll")
     public ResponseEntity<List<Task>> getTaskListTasks(
             @RequestHeader("hash") String hash,
-            @PathVariable Long id
+            @PathVariable("listId") Long listId
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.status(HttpStatus.OK).body(taskRepository.findAllByTaskListId(id));
+        return ResponseEntity.status(HttpStatus.OK).body(taskRepository.findAllByTaskListId(listId));
     }
 
     @GetMapping("/api/taskList/{listId}/task/{taskId}/delete")
     public ResponseEntity<Void> deleteTask(
             @RequestHeader("hash") String hash,
-            @PathVariable Long listId,
-            @PathVariable Long taskId
+            @PathVariable("listId") Long listId,
+            @PathVariable("taskId") Long taskId
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<Task> task = taskRepository.getTaskIfBelongsToList(listId, taskId);
@@ -259,8 +259,8 @@ public class ApiController {
     @GetMapping("/api/taskList/{listId}/task/{taskId}/completed/{completed}")
     public ResponseEntity<Void> toggleTaskCompleted(
             @RequestHeader("hash") String hash,
-            @PathVariable Long listId,
-            @PathVariable Long taskId,
+            @PathVariable("listId") Long listId,
+            @PathVariable("taskId") Long taskId,
             @PathVariable boolean completed
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -285,7 +285,7 @@ public class ApiController {
     @PostMapping("/api/taskList/{listId}/update")
     public ResponseEntity<Void> updateTaskList(
             @RequestHeader("hash") String hash,
-            @PathVariable Long listId,
+            @PathVariable("listId") Long listId,
             @RequestBody TaskList taskList
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -305,8 +305,8 @@ public class ApiController {
     @PostMapping("/api/taskList/{listId}/task/{taskId}/update")
     public ResponseEntity<Void> updateTaskListTask(
             @RequestHeader("hash") String hash,
-            @PathVariable Long listId,
-            @PathVariable Long taskId,
+            @PathVariable("listId") Long listId,
+            @PathVariable("taskId") Long taskId,
             @RequestBody Task task
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
