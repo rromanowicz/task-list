@@ -1,5 +1,9 @@
 package ex.rr.tasklist;
 
+import ex.rr.tasklist.database.entity.HashToken;
+import ex.rr.tasklist.database.entity.Role;
+import ex.rr.tasklist.database.entity.User;
+import ex.rr.tasklist.database.repository.UserRepository;
 import junit.framework.TestCase;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -10,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,7 +55,7 @@ public class UserRepositoryTest extends TestCase {
     @Test
     @Order(4)
     public void shouldReturnUserByName() {
-        Optional<User> temp_user = userRepository.findByName("user1");
+        Optional<User> temp_user = userRepository.findByUsername("user1");
         assertThat(temp_user).isNotNull();
     }
 
@@ -69,7 +74,12 @@ public class UserRepositoryTest extends TestCase {
     }
 
     public void createUser(String username) {
-        User temp_user = User.builder().name(username).build().toBuilder().build();
+        User temp_user = User.builder()
+                .username(username)
+                .password("password")
+                .hashTokens(Collections.singletonList(HashToken.builder().token("asd").build()))
+                .roles(Collections.singletonList(Role.builder().role("USER").build()))
+                .build().toBuilder().build();
         user = userRepository.saveAndFlush(temp_user);
     }
 

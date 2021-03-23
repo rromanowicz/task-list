@@ -1,4 +1,4 @@
-package ex.rr.tasklist;
+package ex.rr.tasklist.database.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,20 +7,20 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
-@Entity
+@SuppressWarnings("unused")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
 @Builder(toBuilder = true)
-public class User {
+public class Role {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_sequence")
-    @SequenceGenerator(name = "user_id_sequence", sequenceName = "USER_ID_SEQ")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "role_id_sequence")
+    @SequenceGenerator(name = "role_id_sequence", sequenceName = "ROLE_ID_SEQ")
     private Long id;
 
-    @Column(unique = true)
-    private String name;
+    private String role;
 
     @Builder.ObtainVia(method = "createdAtChecker")
     private Long createdAt;
@@ -28,5 +28,4 @@ public class User {
     private Long createdAtChecker() {
         return createdAt == null ? System.currentTimeMillis() : createdAt;
     }
-
 }

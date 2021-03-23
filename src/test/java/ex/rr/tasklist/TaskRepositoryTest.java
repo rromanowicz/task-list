@@ -1,5 +1,9 @@
 package ex.rr.tasklist;
 
+import ex.rr.tasklist.database.entity.Task;
+import ex.rr.tasklist.database.entity.TaskList;
+import ex.rr.tasklist.database.repository.TaskListRepository;
+import ex.rr.tasklist.database.repository.TaskRepository;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.platform.commons.logging.Logger;

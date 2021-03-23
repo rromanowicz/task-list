@@ -1,5 +1,10 @@
 package ex.rr.tasklist;
 
+import ex.rr.tasklist.database.entity.Task;
+import ex.rr.tasklist.database.entity.TaskList;
+import ex.rr.tasklist.database.entity.User;
+import ex.rr.tasklist.database.repository.TaskListRepository;
+import ex.rr.tasklist.database.repository.UserRepository;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -105,8 +110,8 @@ public class TaskListRepositoryTest {
         tasks.add(t1);
         tasks.add(t2);
 
-        User u1 = userRepository.findByName("user1").orElse(null);
-        User u2 = userRepository.findByName("user2").orElse(null);
+        User u1 = userRepository.findByUsername("user1").orElse(null);
+        User u2 = userRepository.findByUsername("user2").orElse(null);
         List<User> sharedWith = new ArrayList<>();
         sharedWith.add(u2);
 

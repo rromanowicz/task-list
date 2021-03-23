@@ -1,4 +1,4 @@
-package ex.rr.tasklist;
+package ex.rr.tasklist.config;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
