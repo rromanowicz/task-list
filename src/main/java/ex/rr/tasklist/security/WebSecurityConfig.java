@@ -1,4 +1,4 @@
-package ex.rr.tasklist;
+package ex.rr.tasklist.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+@SuppressWarnings("unused")
 @Configuration
 @EnableGlobalAuthentication
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
@@ -27,8 +28,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .authorizeRequests()
                 .antMatchers("/", "/api/user/create").permitAll()
-                .antMatchers("/api/**/delete").hasAuthority("ADMIN")
-                .anyRequest().hasAnyAuthority("ADMIN", "USER")
+                .antMatchers("/api/taskList/*").hasAnyAuthority("USER","ADMIN")
+                .anyRequest().hasAuthority("ADMIN")
                 .and().httpBasic()
         ;
 

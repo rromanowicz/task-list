@@ -1,4 +1,4 @@
-package ex.rr.tasklist;
+package ex.rr.tasklist.database.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,24 +7,31 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
+@SuppressWarnings("unused")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Builder(toBuilder = true)
-public class Role {
-
+public class HashToken {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "role_id_sequence")
-    @SequenceGenerator(name = "role_id_sequence", sequenceName = "ROLE_ID_SEQ")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "token_id_sequence")
+    @SequenceGenerator(name = "token_id_sequence", sequenceName = "TOKEN_ID_SEQ")
     private Long id;
 
-    private String role;
+    private String token;
 
     @Builder.ObtainVia(method = "createdAtChecker")
     private Long createdAt;
 
+    @Builder.ObtainVia(method = "activeChecker")
+    private Boolean active;
+
     private Long createdAtChecker() {
         return createdAt == null ? System.currentTimeMillis() : createdAt;
+    }
+
+    private boolean activeChecker() {
+        return active == null || active;
     }
 }

@@ -1,5 +1,11 @@
-package ex.rr.tasklist;
+package ex.rr.tasklist.controller;
 
+import ex.rr.tasklist.database.entity.Task;
+import ex.rr.tasklist.database.entity.TaskList;
+import ex.rr.tasklist.database.entity.User;
+import ex.rr.tasklist.database.repository.TaskListRepository;
+import ex.rr.tasklist.database.repository.TaskRepository;
+import ex.rr.tasklist.database.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,24 +28,12 @@ public class ApiController {
     private static final Logger logger = LoggerFactory.getLogger(ApiController.class);
     private List<String> userHash;
 
-
     @Autowired
     private TaskListRepository taskListRepository;
     @Autowired
     private TaskRepository taskRepository;
     @Autowired
     private UserRepository userRepository;
-
-
-    @GetMapping("/test")
-    public ResponseEntity<User> test(){
-        User tempUser = User.builder().username("random_user")
-                .password("random_password")
-                .hashTokens(Collections.singletonList(HashToken.builder().token("adsff9g876g").build().toBuilder().build()))
-                .build().toBuilder().build();
-        return ResponseEntity.status(HttpStatus.I_AM_A_TEAPOT).body(userRepository.save(tempUser));
-    }
-
 
     @GetMapping("/")
     public ResponseEntity<String> root(
@@ -276,12 +270,11 @@ public class ApiController {
             if (completed) {
                 tempTask.setCompleted(true);
                 tempTask.setCompletedAt(System.currentTimeMillis());
-                tempTask.setUpdatedAt(System.currentTimeMillis());
             } else {
                 tempTask.setCompleted(false);
                 tempTask.setCompletedAt(null);
-                tempTask.setUpdatedAt(System.currentTimeMillis());
             }
+            tempTask.setUpdatedAt(System.currentTimeMillis());
             taskRepository.save(tempTask);
             return ResponseEntity.status(HttpStatus.OK).build();
         } else {

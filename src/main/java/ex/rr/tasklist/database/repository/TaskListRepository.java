@@ -1,5 +1,6 @@
-package ex.rr.tasklist;
+package ex.rr.tasklist.database.repository;
 
+import ex.rr.tasklist.database.entity.TaskList;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

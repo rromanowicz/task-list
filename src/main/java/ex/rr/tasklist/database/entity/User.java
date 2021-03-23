@@ -1,10 +1,11 @@
-package ex.rr.tasklist;
+package ex.rr.tasklist.database.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Cascade;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import javax.persistence.*;
 import java.util.Collections;
@@ -12,6 +13,7 @@ import java.util.List;
 
 import static org.hibernate.annotations.CascadeType.ALL;
 
+@SuppressWarnings("unused")
 @Entity
 @Data
 @AllArgsConstructor
@@ -27,6 +29,7 @@ public class User {
     @Column(unique = true)
     private String username;
 
+    @Builder.ObtainVia(method = "passwordChecker")
     private String password;
 
     @Builder.ObtainVia(method = "createdAtChecker")
@@ -52,6 +55,10 @@ public class User {
 
     private List<Role> initRoles() {
         return Collections.singletonList(Role.builder().role("USER").build().toBuilder().build());
+    }
+
+    private String passwordChecker(){
+        return password == null ? null : BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
 

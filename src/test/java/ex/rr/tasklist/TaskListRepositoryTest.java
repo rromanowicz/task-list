@@ -1,5 +1,10 @@
 package ex.rr.tasklist;
 
+import ex.rr.tasklist.database.entity.Task;
+import ex.rr.tasklist.database.entity.TaskList;
+import ex.rr.tasklist.database.entity.User;
+import ex.rr.tasklist.database.repository.TaskListRepository;
+import ex.rr.tasklist.database.repository.UserRepository;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;

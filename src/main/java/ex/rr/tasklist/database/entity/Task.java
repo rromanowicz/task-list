@@ -1,4 +1,4 @@
-package ex.rr.tasklist;
+package ex.rr.tasklist.database.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,5 +1,9 @@
 package ex.rr.tasklist;
 
+import ex.rr.tasklist.database.entity.HashToken;
+import ex.rr.tasklist.database.entity.Role;
+import ex.rr.tasklist.database.entity.User;
+import ex.rr.tasklist.database.repository.UserRepository;
 import junit.framework.TestCase;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
