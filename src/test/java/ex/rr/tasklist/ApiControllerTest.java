@@ -8,8 +8,13 @@ import ex.rr.tasklist.database.entity.*;
 import ex.rr.tasklist.database.repository.TaskListRepository;
 import ex.rr.tasklist.database.repository.TaskRepository;
 import ex.rr.tasklist.database.repository.UserRepository;
+import ex.rr.tasklist.database.response.TaskListResponse;
+import ex.rr.tasklist.database.response.UserResponse;
 import junit.framework.TestCase;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +61,8 @@ public class ApiControllerTest extends TestCase {
     private static final String RANDOM_PASSWORD = "password";
     public static final String ADMIN_CREDENTIALS = "Basic " + Base64.getEncoder().encodeToString((RUN_ADMIN + ":" + RUN_PASSWORD).getBytes());
     public static final String USER_CREDENTIALS = "Basic " + Base64.getEncoder().encodeToString((RUN_USER + ":" + RUN_PASSWORD).getBytes());
-    private static TaskList taskList;
-    private static User user;
+    private static TaskListResponse taskList;
+    private static UserResponse user;
     private static Task task;
 
     @Autowired
@@ -118,8 +123,7 @@ public class ApiControllerTest extends TestCase {
                 .andReturn();
 
         String json = mvcResult.getResponse().getContentAsString();
-        user = new ObjectMapper().readValue(json, User.class);
-        logger.info(user.toString());
+        user = new ObjectMapper().readValue(json, UserResponse.class);
     }
 
     @Test
@@ -277,7 +281,7 @@ public class ApiControllerTest extends TestCase {
                 .andReturn();
 
         String json = mvcResult.getResponse().getContentAsString();
-        taskList = new ObjectMapper().readValue(json, TaskList.class);
+        taskList = new ObjectMapper().readValue(json, TaskListResponse.class);
         logger.info(taskList.toString());
     }
 
@@ -293,14 +297,14 @@ public class ApiControllerTest extends TestCase {
                 .andReturn();
 
         String json = mvcResult.getResponse().getContentAsString();
-        TaskList responseTaskList = new ObjectMapper().readValue(json, TaskList.class);
+        TaskListResponse responseTaskList = new ObjectMapper().readValue(json, TaskListResponse.class);
 
         assertThat(responseTaskList).isEqualTo(taskList);
         assertThat(responseTaskList.getTasks()).hasSize(2);
         assertThat(responseTaskList.getOwner()).isNotNull();
         assertThat(responseTaskList.getCreatedAt()).isNotNull();
         assertThat(responseTaskList.getSharedWith()).hasSize(1);
-        assertThat(responseTaskList.getSharedWith().stream().filter(user -> "user2".equals(user.getUsername())).findFirst().orElse(null)).isNotNull();
+        assertThat(responseTaskList.getSharedWith().stream().filter(u -> "user2".equals(u.getUsername())).findFirst().orElse(null)).isNotNull();
     }
 
     @Test
@@ -316,7 +320,7 @@ public class ApiControllerTest extends TestCase {
 
         String json = mvcResult.getResponse().getContentAsString();
         ObjectMapper mapper = new ObjectMapper();
-        List<TaskList> responseTaskList = mapper.readValue(json, mapper.getTypeFactory().constructCollectionType(List.class, TaskList.class));
+        List<TaskListResponse> responseTaskList = mapper.readValue(json, mapper.getTypeFactory().constructCollectionType(List.class, TaskListResponse.class));
         assertThat(responseTaskList).hasSizeGreaterThan(0);
     }
 
@@ -493,6 +497,26 @@ public class ApiControllerTest extends TestCase {
     }
 
     @Test
+    @Order(66)
+    public void shouldCreateFileForId() throws Exception {
+        this.mockMvc.perform(get("/api/taskList/id/" + taskList.getId() + "/download/")
+                .header("hash", USER_HASH)
+                .header("Authorization", ADMIN_CREDENTIALS))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(67)
+    public void shouldCreateFileForUser() throws Exception {
+        this.mockMvc.perform(get("/api/taskList/user/" + RUN_USER + "/download/")
+                .header("hash", USER_HASH)
+                .header("Authorization", ADMIN_CREDENTIALS))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @Order(90)
     public void shouldDeleteTask() throws Exception {
         this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/task/" + task.getId() + "/delete")
@@ -528,7 +552,7 @@ public class ApiControllerTest extends TestCase {
     @Test
     @Order(93)
     public void shouldNotFindTaskListsByUser() throws Exception {
-        this.mockMvc.perform(get("/api/taskList/get/user/" + "some_random_username")
+        this.mockMvc.perform(get("/api/taskList/get/user/" + RANDOM_USERNAME)
                 .header("hash", USER_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())

@@ -1,11 +1,14 @@
 package ex.rr.tasklist.controller;
 
+import ex.rr.tasklist.ResponseMapper;
 import ex.rr.tasklist.database.entity.Task;
 import ex.rr.tasklist.database.entity.TaskList;
 import ex.rr.tasklist.database.entity.User;
 import ex.rr.tasklist.database.repository.TaskListRepository;
 import ex.rr.tasklist.database.repository.TaskRepository;
 import ex.rr.tasklist.database.repository.UserRepository;
+import ex.rr.tasklist.database.response.TaskListResponse;
+import ex.rr.tasklist.database.response.UserResponse;
 import ex.rr.tasklist.files.FileExport;
 import ex.rr.tasklist.files.FileExportImpl;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
@@ -23,10 +26,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @SuppressWarnings("unused")
 @Controller
@@ -44,6 +44,8 @@ public class ApiController {
     private UserRepository userRepository;
     @Autowired
     private FileExport fileExport;
+    @Autowired
+    private ResponseMapper responseMapper;
 
     @GetMapping("/")
     public ResponseEntity<String> root(
@@ -52,13 +54,13 @@ public class ApiController {
     }
 
     @PostMapping("/api/user/create")
-    public ResponseEntity<User> createUser(
+    public ResponseEntity<UserResponse> createUser(
             @RequestHeader("hash") String hash,
             @RequestBody User user
     ) {
         try {
             if (!userRepository.findByUsername(user.getUsername()).isPresent()) {
-                return ResponseEntity.status(HttpStatus.CREATED).body(userRepository.saveAndFlush(user));
+                return ResponseEntity.status(HttpStatus.CREATED).body(responseMapper.mapUserResponse(userRepository.saveAndFlush(user)));
             } else {
                 return ResponseEntity.status(HttpStatus.FOUND).build();
             }
@@ -69,29 +71,29 @@ public class ApiController {
     }
 
     @GetMapping("/api/user/id/{userId}")
-    public ResponseEntity<User> getUserById(
+    public ResponseEntity<UserResponse> getUserById(
             @RequestHeader("hash") String hash,
             @PathVariable("userId") Long userId
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<User> user = userRepository.findById(userId);
-        return user.map(value -> ResponseEntity.status(HttpStatus.OK).body(value))
+        return user.map(value -> ResponseEntity.status(HttpStatus.OK).body(responseMapper.mapUserResponse(value)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     @GetMapping("/api/user/name/{username}")
-    public ResponseEntity<User> getUserByName(
+    public ResponseEntity<UserResponse> getUserByName(
             @RequestHeader("hash") String hash,
             @PathVariable("username") String username
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<User> user = userRepository.findByUsername(username);
-        return user.map(value -> ResponseEntity.status(HttpStatus.OK).body(value))
+        return user.map(value -> ResponseEntity.status(HttpStatus.OK).body(responseMapper.mapUserResponse(value)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     @GetMapping("/api/user/id/{userId}/delete")
-    public ResponseEntity<User> deleteUserById(
+    public ResponseEntity<Void> deleteUserById(
             @RequestHeader("hash") String hash,
             @PathVariable("userId") Long userId
     ) {
@@ -106,7 +108,7 @@ public class ApiController {
     }
 
     @GetMapping("/api/user/name/{username}/delete")
-    public ResponseEntity<User> deleteUserByName(
+    public ResponseEntity<Void> deleteUserByName(
             @RequestHeader("hash") String hash,
             @PathVariable("username") String username
     ) {
@@ -121,13 +123,13 @@ public class ApiController {
     }
 
     @PostMapping("/api/taskList/create")
-    public ResponseEntity<TaskList> createTaskList(
+    public ResponseEntity<TaskListResponse> createTaskList(
             @RequestHeader("hash") String hash,
             @RequestBody TaskList taskList
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(taskListRepository.save(taskList));
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseMapper.mapTaskListResponse(taskListRepository.save(taskList)));
         } catch (Exception e) {
             logger.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -135,25 +137,27 @@ public class ApiController {
     }
 
     @GetMapping("/api/taskList/get/id/{listId}")
-    public ResponseEntity<TaskList> getTaskListById(
+    public ResponseEntity<TaskListResponse> getTaskListById(
             @RequestHeader("hash") String hash,
             @PathVariable("listId") Long listId
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<TaskList> taskList = taskListRepository.findById(listId);
-        return taskList.map(list -> ResponseEntity.status(HttpStatus.OK).body(list))
+        return taskList.map(list -> ResponseEntity.status(HttpStatus.OK).body(responseMapper.mapTaskListResponse(list)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     @GetMapping("/api/taskList/get/user/{username}")
-    public ResponseEntity<List<TaskList>> getTaskListById(
+    public ResponseEntity<List<TaskListResponse>> getTaskListById(
             @RequestHeader("hash") String hash,
             @PathVariable("username") String username
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        List<TaskList> taskList = taskListRepository.findAllByUser(username);
-        if (!taskList.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.OK).body(taskList);
+        List<TaskList> taskLists = taskListRepository.findAllByUser(username);
+        if (!taskLists.isEmpty()) {
+            List<TaskListResponse> responses = new ArrayList<>();
+            taskLists.forEach(it -> responses.add(responseMapper.mapTaskListResponse(it)));
+            return ResponseEntity.status(HttpStatus.OK).body(responses);
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
@@ -296,13 +300,13 @@ public class ApiController {
     public ResponseEntity<Void> updateTaskList(
             @RequestHeader("hash") String hash,
             @PathVariable("listId") Long listId,
-            @RequestBody TaskList taskList
+            @RequestBody TaskListResponse taskListResponse
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        if (listId.equals(taskList.getId())) {
+        if (listId.equals(taskListResponse.getId())) {
             if (taskListRepository.existsById(listId)) {
-                taskList.setUpdatedAt(System.currentTimeMillis());
-                taskListRepository.save(taskList);
+                taskListResponse.setUpdatedAt(System.currentTimeMillis());
+                taskListRepository.save(responseMapper.mapTaskList(taskListResponse));
                 return ResponseEntity.status(HttpStatus.CREATED).build();
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
