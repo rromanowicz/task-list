@@ -57,9 +57,12 @@ public class User {
         return Collections.singletonList(Role.builder().role("USER").build().toBuilder().build());
     }
 
-    private String passwordChecker(){
+    private String passwordChecker() {
         return password == null ? null : BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
+    public void initToken(String token) {
+        hashTokens = Collections.singletonList(HashToken.builder().token(token).build().toBuilder().build());
+    }
 
 }

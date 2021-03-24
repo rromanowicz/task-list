@@ -8,6 +8,7 @@ import ex.rr.tasklist.database.entity.*;
 import ex.rr.tasklist.database.repository.TaskListRepository;
 import ex.rr.tasklist.database.repository.TaskRepository;
 import ex.rr.tasklist.database.repository.UserRepository;
+import ex.rr.tasklist.database.request.UserRequest;
 import ex.rr.tasklist.database.response.TaskListResponse;
 import ex.rr.tasklist.database.response.UserResponse;
 import junit.framework.TestCase;
@@ -73,6 +74,8 @@ public class ApiControllerTest extends TestCase {
     private TaskListRepository taskListRepository;
     @Autowired
     private TaskRepository taskRepository;
+    @Autowired
+    private ResponseMapper responseMapper;
 
     @Test
     @Order(0)
@@ -108,11 +111,10 @@ public class ApiControllerTest extends TestCase {
     @Test
     @Order(2)
     public void shouldCreateUser() throws Exception {
-        User tempUser = User.builder()
+        UserRequest tempUser = UserRequest.builder()
                 .username(RANDOM_USERNAME)
                 .password(RANDOM_PASSWORD)
-                .hashTokens(Collections.singletonList(HashToken.builder().token(RANDOM_USER_HASH).build().toBuilder().build()))
-                .build().toBuilder().build();
+                .build();
 
         MvcResult mvcResult = this.mockMvc.perform(post("/api/user/create")
                 .header("hash", USER_HASH)
@@ -129,7 +131,10 @@ public class ApiControllerTest extends TestCase {
     @Test
     @Order(3)
     public void shouldNotCreateUserIfExists() throws Exception {
-        User tempUser = User.builder().username(RANDOM_USERNAME).build().toBuilder().build();
+        UserRequest tempUser = UserRequest.builder()
+                .username(RANDOM_USERNAME)
+                .password(RANDOM_PASSWORD)
+                .build();
 
         this.mockMvc.perform(post("/api/user/create")
                 .header("hash", USER_HASH)
@@ -269,7 +274,8 @@ public class ApiControllerTest extends TestCase {
     @Test
     @Order(51)
     public void shouldCreateTaskList() throws Exception {
-        TaskList tempTaskList = createTaskList();
+        TaskListResponse tempTaskList = createTaskList();
+
 
         MvcResult mvcResult = this.mockMvc.perform(post("/api/taskList/create")
                 .header("hash", USER_HASH)
@@ -279,6 +285,8 @@ public class ApiControllerTest extends TestCase {
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andReturn();
+
+
 
         String json = mvcResult.getResponse().getContentAsString();
         taskList = new ObjectMapper().readValue(json, TaskListResponse.class);
@@ -560,7 +568,7 @@ public class ApiControllerTest extends TestCase {
     }
 
 
-    private TaskList createTaskList() {
+    private TaskListResponse createTaskList() {
         List<Task> tasks = new ArrayList<>();
         Task t1 = Task.builder().taskName("test1").build().toBuilder().build();
         Task t2 = Task.builder().taskName("test2").build().toBuilder().build();
@@ -572,15 +580,17 @@ public class ApiControllerTest extends TestCase {
         List<User> sharedWith = new ArrayList<>();
         sharedWith.add(u2);
 
-        return TaskList.builder()
+        TaskList tl = TaskList.builder()
                 .listName("list1")
                 .listDescription("desc1")
                 .tasks(tasks)
                 .owner(u1)
                 .sharedWith(sharedWith)
                 .build()
-                .toBuilder()
-                .build();
+                .toBuilder().build();
+
+
+        return responseMapper.mapTaskListResponse(tl);
     }
 
     private String getRequestJson(Object object) throws JsonProcessingException {

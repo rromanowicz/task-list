@@ -7,16 +7,17 @@ import ex.rr.tasklist.database.entity.User;
 import ex.rr.tasklist.database.repository.TaskListRepository;
 import ex.rr.tasklist.database.repository.TaskRepository;
 import ex.rr.tasklist.database.repository.UserRepository;
+import ex.rr.tasklist.database.request.UserRequest;
 import ex.rr.tasklist.database.response.TaskListResponse;
 import ex.rr.tasklist.database.response.UserResponse;
 import ex.rr.tasklist.files.FileExport;
-import ex.rr.tasklist.files.FileExportImpl;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -56,8 +57,11 @@ public class ApiController {
     @PostMapping("/api/user/create")
     public ResponseEntity<UserResponse> createUser(
             @RequestHeader("hash") String hash,
-            @RequestBody User user
+            @RequestBody UserRequest userRequest
     ) {
+        User user = User.builder().username(userRequest.getUsername()).password(userRequest.getPassword()).build().toBuilder().build();
+        user.initToken(hash);
+
         try {
             if (!userRepository.findByUsername(user.getUsername()).isPresent()) {
                 return ResponseEntity.status(HttpStatus.CREATED).body(responseMapper.mapUserResponse(userRepository.saveAndFlush(user)));
@@ -125,11 +129,17 @@ public class ApiController {
     @PostMapping("/api/taskList/create")
     public ResponseEntity<TaskListResponse> createTaskList(
             @RequestHeader("hash") String hash,
-            @RequestBody TaskList taskList
+            @RequestBody TaskListResponse taskList
     ) {
         if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        logger.error(taskList.toString());
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(responseMapper.mapTaskListResponse(taskListRepository.save(taskList)));
+            TaskList taskList1 = responseMapper.mapTaskList(taskList);
+            logger.error(taskList1.toString());
+            TaskList save = taskListRepository.save(taskList1);
+            logger.error(save.toString());
+            TaskListResponse response = responseMapper.mapTaskListResponse(save);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             logger.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -337,18 +347,17 @@ public class ApiController {
         }
     }
 
-    @GetMapping("/api/download")
-    public ResponseEntity<Void> testtt() {
-        Long listId = 2302L;
-        FileExport fileExport = new FileExportImpl();
-        Optional<TaskList> taskList = taskListRepository.findById(listId);
-        logger.info(String.valueOf(taskList));
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
     @GetMapping("/api/taskList/id/{listId}/download")
     @ResponseBody
-    public void downloadTaskList(HttpServletResponse response, @PathVariable("listId") Long listId) {
+    public void downloadTaskList(
+            HttpServletResponse response,
+            @RequestHeader("hash") String hash,
+            @PathVariable("listId") Long listId
+    ) {
+        if (validateHeader(hash)) {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            return;
+        }
         Optional<TaskList> taskList = taskListRepository.findById(listId);
         try {
             if (taskList.isPresent()) {
@@ -369,7 +378,15 @@ public class ApiController {
 
     @GetMapping("/api/taskList/user/{username}/download")
     @ResponseBody
-    public void downloadTaskList(HttpServletResponse response, @PathVariable("username") String username) {
+    public void downloadTaskList(
+            HttpServletResponse response,
+            @RequestHeader("hash") String hash,
+            @PathVariable("username") String username
+    ) {
+        if (validateHeader(hash)) {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            return;
+        }
         List<TaskList> taskLists = taskListRepository.findAllByUser(username);
         try {
             if (!taskLists.isEmpty()) {

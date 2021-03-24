@@ -13,8 +13,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsername(String name);
 
-    @Query(value = "SELECT u.* FROM 'user' u WHERE u.username IN (?1)", nativeQuery = true)
-    List<User> findByUsernames(List<String> names);
+    @Query(value = "SELECT u.* FROM 'user' u WHERE u.username=?1 OR u.username IN (?2)", nativeQuery = true)
+    List<User> findByUsernames(String owner, List<String> names);
 
     @Query(value = "SELECT ht.token FROM hash_token ht WHERE ht.active=1", nativeQuery = true)
     List<String> findActiveTokens();

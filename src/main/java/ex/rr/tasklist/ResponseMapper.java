@@ -39,7 +39,7 @@ public class ResponseMapper {
 //        List<User> users = userRepository.findByUsernames(taskListResponse.getOwner().getUsername()
 //                , taskListResponse.getSharedWith().stream().map(UserResponse::getUsername).collect(Collectors.toList()));
 
-        List<User> users = mapUserList(taskListResponse.getSharedWith());
+        List<User> users = mapUserList(taskListResponse.getOwner(), taskListResponse.getSharedWith());
 
         return TaskList.builder()
                 .id(taskListResponse.getId())
@@ -48,7 +48,7 @@ public class ResponseMapper {
                 .createdAt(taskListResponse.getCreatedAt())
                 .updatedAt(taskListResponse.getUpdatedAt())
                 .tasks(taskListResponse.getTasks())
-//                .owner(users.stream().filter(user -> user.getUsername().equals(taskListResponse.getOwner().getUsername())).collect(Collectors.toList()).get(0))
+                .owner(users.stream().filter(user -> user.getUsername().equals(taskListResponse.getOwner().getUsername())).collect(Collectors.toList()).get(0))
                 .sharedWith(users.stream().filter(user -> !user.getUsername().equals(taskListResponse.getOwner().getUsername())).collect(Collectors.toList()))
                 .build();
     }
@@ -67,9 +67,9 @@ public class ResponseMapper {
         return userList;
     }
 
-    private List<User> mapUserList(List<UserResponse> users) {
+    private List<User> mapUserList(UserResponse owner, List<UserResponse> users) {
 
-        return userRepository.findByUsernames(users.stream().map(UserResponse::getUsername).collect(Collectors.toList()));
+        return userRepository.findByUsernames(owner.getUsername(), users.stream().map(UserResponse::getUsername).collect(Collectors.toList()));
     }
 
 
