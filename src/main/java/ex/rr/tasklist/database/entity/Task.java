@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
+@SuppressWarnings("unused")
 @Data
 @Entity
 @AllArgsConstructor

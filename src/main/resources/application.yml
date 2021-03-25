@@ -6,6 +6,10 @@ spring:
     properties:
       hibernate:
         enable_lazy_load_no_trans: true
+  servlet:
+    multipart:
+      max-file-size: 64KB
+      max-request-size: 64KB
 
   datasource:
     url: jdbc:sqlite:tasklist.db
@@ -16,6 +20,7 @@ spring:
 server:
   port: 8443
   ssl:
+    enabled: true
     key-store: classpath:tasklist.p12
     key-store-password: password
     keyStoreType: PKCS12

@@ -349,7 +349,7 @@ public class ApiControllerTest extends TestCase {
     @Order(55)
     public void shouldReturnShareWithUserListNotFound() throws Exception {
         this.mockMvc.perform(get("/api/taskList/9999/share/" + SHARE_WITH_USER)
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isNotFound())
@@ -360,7 +360,7 @@ public class ApiControllerTest extends TestCase {
     @Order(56)
     public void shouldReturnShareWithUserUserNotFound() throws Exception {
         this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/share/" + RANDOM_USERNAME)
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isNotFound())
@@ -466,7 +466,7 @@ public class ApiControllerTest extends TestCase {
     @Order(63)
     public void shouldReturnUpdateTaskListForbidden() throws Exception {
         this.mockMvc.perform(post("/api/taskList/9999/update")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(getRequestJson(taskList)))
