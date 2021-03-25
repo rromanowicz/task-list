@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,10 +37,9 @@ public class ResponseMapper {
     }
 
     public TaskList mapTaskList(TaskListResponse taskListResponse) {
-//        List<User> users = userRepository.findByUsernames(taskListResponse.getOwner().getUsername()
-//                , taskListResponse.getSharedWith().stream().map(UserResponse::getUsername).collect(Collectors.toList()));
-
-        List<User> users = mapUserList(taskListResponse.getOwner(), taskListResponse.getSharedWith());
+        UserResponse owner = taskListResponse.getOwner();
+        List<UserResponse> sharedWith = taskListResponse.getSharedWith();
+        List<User> users = mapUserList(owner, sharedWith);
 
         return TaskList.builder()
                 .id(taskListResponse.getId())
@@ -48,8 +48,10 @@ public class ResponseMapper {
                 .createdAt(taskListResponse.getCreatedAt())
                 .updatedAt(taskListResponse.getUpdatedAt())
                 .tasks(taskListResponse.getTasks())
-                .owner(users.stream().filter(user -> user.getUsername().equals(taskListResponse.getOwner().getUsername())).collect(Collectors.toList()).get(0))
-                .sharedWith(users.stream().filter(user -> !user.getUsername().equals(taskListResponse.getOwner().getUsername())).collect(Collectors.toList()))
+                .owner(owner == null ? null : users.stream().filter(user ->
+                        user.getUsername().equals(taskListResponse.getOwner().getUsername())).collect(Collectors.toList()).get(0))
+                .sharedWith(sharedWith == null || sharedWith.isEmpty() ? null :
+                        users.stream().filter(user -> !user.getUsername().equals(taskListResponse.getOwner().getUsername())).collect(Collectors.toList()))
                 .build();
     }
 
@@ -68,8 +70,12 @@ public class ResponseMapper {
     }
 
     private List<User> mapUserList(UserResponse owner, List<UserResponse> users) {
-
-        return userRepository.findByUsernames(owner.getUsername(), users.stream().map(UserResponse::getUsername).collect(Collectors.toList()));
+        if(users != null) {
+            users.add(owner);
+        } else {
+            users = Collections.singletonList(owner);
+        }
+        return userRepository.findByUsernames(users.stream().map(UserResponse::getUsername).collect(Collectors.toList()));
     }
 
 

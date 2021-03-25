@@ -405,6 +405,24 @@ public class ApiController {
         }
     }
 
+    @PostMapping("/api/taskList/upload")
+    public ResponseEntity<String> uploadFile(
+            @RequestHeader("hash") String hash,
+            @RequestParam("file") MultipartFile file
+    ) {
+        try {
+            Optional<User> userByToken = userRepository.findUserByToken(hash);
+            if (!userByToken.isPresent())
+                throw new IllegalAccessException();
+            List<TaskList> parsedLists = fileParser.toTaskList(file, responseMapper.mapUserResponse(userByToken.get()));
+            taskListRepository.saveAll(parsedLists);
+            return ResponseEntity.status(HttpStatus.OK).body(String.format("File '%s', Processed {%s} records.", file.getName(), parsedLists.size()));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
     private void generateFile(Object object, String fileName, OutputStream outputStream) throws IOException {
         File tempFile = fileExport.exportTxt(fileName, object).toFile();
         FileInputStream fileInputStream = new FileInputStream(tempFile);
