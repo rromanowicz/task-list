@@ -12,6 +12,7 @@ import java.util.List;
 import static org.hibernate.annotations.CascadeType.ALL;
 import static org.hibernate.annotations.CascadeType.MERGE;
 
+@SuppressWarnings("unused")
 @Data
 @Entity
 @AllArgsConstructor

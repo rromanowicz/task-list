@@ -117,7 +117,7 @@ public class ApiControllerTest extends TestCase {
                 .build();
 
         MvcResult mvcResult = this.mockMvc.perform(post("/api/user/create")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(getRequestJson(tempUser)))
                 .andDo(print())
@@ -137,7 +137,7 @@ public class ApiControllerTest extends TestCase {
                 .build();
 
         this.mockMvc.perform(post("/api/user/create")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(getRequestJson(tempUser)))
                 .andDo(print())
@@ -148,7 +148,7 @@ public class ApiControllerTest extends TestCase {
     @Order(4)
     public void shouldReturnUserById() throws Exception {
         this.mockMvc.perform(get("/api/user/id/1")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -160,7 +160,7 @@ public class ApiControllerTest extends TestCase {
     @Order(5)
     public void shouldReturnUserByIdForbidden() throws Exception {
         this.mockMvc.perform(get("/api/user/id/1")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", USER_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isForbidden());
@@ -170,7 +170,7 @@ public class ApiControllerTest extends TestCase {
     @Order(6)
     public void shouldReturnUserByIdNotFound() throws Exception {
         this.mockMvc.perform(get("/api/user/id/9999")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isNotFound());
@@ -180,7 +180,7 @@ public class ApiControllerTest extends TestCase {
     @Order(7)
     public void shouldReturnUserByName() throws Exception {
         this.mockMvc.perform(get("/api/user/name/" + RANDOM_USERNAME)
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -192,7 +192,7 @@ public class ApiControllerTest extends TestCase {
     @Order(8)
     public void shouldReturnUserByNameForbidden() throws Exception {
         this.mockMvc.perform(get("/api/user/name/" + RANDOM_USERNAME)
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", USER_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isForbidden());
@@ -202,7 +202,7 @@ public class ApiControllerTest extends TestCase {
     @Order(9)
     public void shouldReturnUserByNameNotFound() throws Exception {
         this.mockMvc.perform(get("/api/user/name/9999")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isNotFound());
@@ -212,7 +212,7 @@ public class ApiControllerTest extends TestCase {
     @Order(10)
     public void shouldDeleteUserById() throws Exception {
         this.mockMvc.perform(get("/api/user/id/" + user.getId() + "/delete")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -223,7 +223,7 @@ public class ApiControllerTest extends TestCase {
     @Order(11)
     public void shouldReturnDeleteUserByIdNotFound() throws Exception {
         this.mockMvc.perform(get("/api/user/id/" + user.getId() + "/delete")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isNotFound());
@@ -233,7 +233,7 @@ public class ApiControllerTest extends TestCase {
     @Order(12)
     public void shouldReturnDeleteUserByIdUnauthorized() throws Exception {
         this.mockMvc.perform(get("/api/user/id/" + user.getId() + "/delete")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", USER_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isForbidden());
@@ -244,7 +244,7 @@ public class ApiControllerTest extends TestCase {
     public void shouldDeleteUserByName() throws Exception {
         shouldCreateUser();
         this.mockMvc.perform(get("/api/user/name/" + RANDOM_USERNAME + "/delete")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -255,7 +255,7 @@ public class ApiControllerTest extends TestCase {
     @Order(14)
     public void shouldReturnDeleteUserByNameNotFound() throws Exception {
         this.mockMvc.perform(get("/api/user/name/" + RANDOM_USERNAME + "/delete")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isNotFound());
@@ -265,7 +265,7 @@ public class ApiControllerTest extends TestCase {
     @Order(15)
     public void shouldReturnDeleteUserByNameUnauthorized() throws Exception {
         this.mockMvc.perform(get("/api/user/name/" + RANDOM_USERNAME + "/delete")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", USER_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isForbidden());
@@ -278,7 +278,7 @@ public class ApiControllerTest extends TestCase {
 
 
         MvcResult mvcResult = this.mockMvc.perform(post("/api/taskList/create")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(getRequestJson(tempTaskList)))
@@ -297,7 +297,7 @@ public class ApiControllerTest extends TestCase {
     @Order(52)
     public void shouldReturnTaskListById() throws Exception {
         MvcResult mvcResult = this.mockMvc.perform(get("/api/taskList/get/id/" + taskList.getId())
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -319,7 +319,7 @@ public class ApiControllerTest extends TestCase {
     @Order(53)
     public void shouldReturnTaskListsByUser() throws Exception {
         MvcResult mvcResult = this.mockMvc.perform(get("/api/taskList/get/user/" + taskList.getOwner().getUsername())
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -336,7 +336,7 @@ public class ApiControllerTest extends TestCase {
     @Order(54)
     public void shouldShareWithUser() throws Exception {
         this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/share/" + SHARE_WITH_USER)
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -349,7 +349,7 @@ public class ApiControllerTest extends TestCase {
     @Order(55)
     public void shouldReturnShareWithUserListNotFound() throws Exception {
         this.mockMvc.perform(get("/api/taskList/9999/share/" + SHARE_WITH_USER)
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isNotFound())
@@ -360,7 +360,7 @@ public class ApiControllerTest extends TestCase {
     @Order(56)
     public void shouldReturnShareWithUserUserNotFound() throws Exception {
         this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/share/" + RANDOM_USERNAME)
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isNotFound())
@@ -371,7 +371,7 @@ public class ApiControllerTest extends TestCase {
     @Order(57)
     public void shouldUnShareWithUser() throws Exception {
         this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/unShare/" + SHARE_WITH_USER)
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -386,7 +386,7 @@ public class ApiControllerTest extends TestCase {
         Task tempTask = Task.builder().taskName(RANDOM_TASK_NAME).build().toBuilder().build();
 
         MvcResult mvcResult = this.mockMvc.perform(post("/api/taskList/" + taskList.getId() + "/task/add")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(getRequestJson(tempTask)))
@@ -404,7 +404,7 @@ public class ApiControllerTest extends TestCase {
     public void shouldGetAllTasksForTaskList() throws Exception {
 
         MvcResult mvcResult = this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/task/getAll")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -421,7 +421,7 @@ public class ApiControllerTest extends TestCase {
     @Order(60)
     public void shouldMarkTaskAsCompleted() throws Exception {
         this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/task/" + task.getId() + "/completed/true")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -433,7 +433,7 @@ public class ApiControllerTest extends TestCase {
     @Order(61)
     public void shouldMarkTaskAsNotCompleted() throws Exception {
         this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/task/" + task.getId() + "/completed/false")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -448,7 +448,7 @@ public class ApiControllerTest extends TestCase {
         taskList.setListDescription("updatedListDescription");
 
         MvcResult mvcResult = this.mockMvc.perform(post("/api/taskList/" + taskList.getId() + "/update")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(getRequestJson(taskList)))
@@ -466,7 +466,7 @@ public class ApiControllerTest extends TestCase {
     @Order(63)
     public void shouldReturnUpdateTaskListForbidden() throws Exception {
         this.mockMvc.perform(post("/api/taskList/9999/update")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(getRequestJson(taskList)))
@@ -480,7 +480,7 @@ public class ApiControllerTest extends TestCase {
         task.setTaskName("updatedTaskName");
 
         this.mockMvc.perform(post("/api/taskList/" + taskList.getId() + "/task/" + task.getId() + "/update")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(getRequestJson(task)))
@@ -496,7 +496,7 @@ public class ApiControllerTest extends TestCase {
     @Order(65)
     public void shouldReturnUpdateTaskForbidden() throws Exception {
         this.mockMvc.perform(post("/api/taskList/" + taskList.getId() + "/task/9999/update")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(getRequestJson(task)))
@@ -508,7 +508,7 @@ public class ApiControllerTest extends TestCase {
     @Order(66)
     public void shouldCreateFileForId() throws Exception {
         this.mockMvc.perform(get("/api/taskList/id/" + taskList.getId() + "/download/")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -518,7 +518,7 @@ public class ApiControllerTest extends TestCase {
     @Order(67)
     public void shouldCreateFileForUser() throws Exception {
         this.mockMvc.perform(get("/api/taskList/user/" + RUN_USER + "/download/")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -528,7 +528,7 @@ public class ApiControllerTest extends TestCase {
     @Order(90)
     public void shouldDeleteTask() throws Exception {
         this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/task/" + task.getId() + "/delete")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -539,7 +539,7 @@ public class ApiControllerTest extends TestCase {
     @Order(91)
     public void shouldDeleteTaskListById() throws Exception {
         this.mockMvc.perform(get("/api/taskList/" + taskList.getId() + "/delete")
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -550,7 +550,7 @@ public class ApiControllerTest extends TestCase {
     @Order(92)
     public void shouldReturnDeleteNotFound() throws Exception {
         this.mockMvc.perform(get("/api/taskList/delete/id/" + taskList.getId())
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isNotFound());
@@ -561,7 +561,7 @@ public class ApiControllerTest extends TestCase {
     @Order(93)
     public void shouldNotFindTaskListsByUser() throws Exception {
         this.mockMvc.perform(get("/api/taskList/get/user/" + RANDOM_USERNAME)
-                .header("hash", USER_HASH)
+                .header("hash", ADMIN_HASH)
                 .header("Authorization", ADMIN_CREDENTIALS))
                 .andDo(print())
                 .andExpect(status().isNotFound());

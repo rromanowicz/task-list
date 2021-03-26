@@ -1,5 +1,6 @@
 package ex.rr.tasklist.controller;
 
+import ex.rr.tasklist.FileParser;
 import ex.rr.tasklist.ResponseMapper;
 import ex.rr.tasklist.database.entity.Task;
 import ex.rr.tasklist.database.entity.TaskList;
@@ -17,10 +18,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -35,7 +36,6 @@ import java.util.*;
 public class ApiController {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiController.class);
-    private List<String> userHash;
 
     @Autowired
     private TaskListRepository taskListRepository;
@@ -47,6 +47,8 @@ public class ApiController {
     private FileExport fileExport;
     @Autowired
     private ResponseMapper responseMapper;
+    @Autowired
+    private FileParser fileParser;
 
     @GetMapping("/")
     public ResponseEntity<String> root(
@@ -79,7 +81,7 @@ public class ApiController {
             @RequestHeader("hash") String hash,
             @PathVariable("userId") Long userId
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!hasAccess(hash, userId, "userId")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<User> user = userRepository.findById(userId);
         return user.map(value -> ResponseEntity.status(HttpStatus.OK).body(responseMapper.mapUserResponse(value)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
@@ -90,7 +92,7 @@ public class ApiController {
             @RequestHeader("hash") String hash,
             @PathVariable("username") String username
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!hasAccess(hash, username, "username")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<User> user = userRepository.findByUsername(username);
         return user.map(value -> ResponseEntity.status(HttpStatus.OK).body(responseMapper.mapUserResponse(value)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
@@ -101,7 +103,7 @@ public class ApiController {
             @RequestHeader("hash") String hash,
             @PathVariable("userId") Long userId
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!hasAccess(hash, userId, "userId")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         try {
             userRepository.deleteById(userId);
             return ResponseEntity.status(HttpStatus.OK).build();
@@ -116,7 +118,7 @@ public class ApiController {
             @RequestHeader("hash") String hash,
             @PathVariable("username") String username
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!hasAccess(hash, username, "username")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<User> user = userRepository.findByUsername(username);
         if (user.isPresent()) {
             userRepository.deleteById(user.get().getId());
@@ -131,13 +133,10 @@ public class ApiController {
             @RequestHeader("hash") String hash,
             @RequestBody TaskListResponse taskList
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        logger.error(taskList.toString());
+        if (!hasAccess(hash, taskList.getOwner().getId(), "userId")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         try {
             TaskList taskList1 = responseMapper.mapTaskList(taskList);
-            logger.error(taskList1.toString());
             TaskList save = taskListRepository.save(taskList1);
-            logger.error(save.toString());
             TaskListResponse response = responseMapper.mapTaskListResponse(save);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
@@ -151,7 +150,8 @@ public class ApiController {
             @RequestHeader("hash") String hash,
             @PathVariable("listId") Long listId
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!hasAccess(hash, listId, "listId"))
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<TaskList> taskList = taskListRepository.findById(listId);
         return taskList.map(list -> ResponseEntity.status(HttpStatus.OK).body(responseMapper.mapTaskListResponse(list)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
@@ -162,7 +162,7 @@ public class ApiController {
             @RequestHeader("hash") String hash,
             @PathVariable("username") String username
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!hasAccess(hash, username, "username")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         List<TaskList> taskLists = taskListRepository.findAllByUser(username);
         if (!taskLists.isEmpty()) {
             List<TaskListResponse> responses = new ArrayList<>();
@@ -178,7 +178,7 @@ public class ApiController {
             @RequestHeader("hash") String hash,
             @PathVariable("listId") Long listId
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!hasAccess(hash, listId, "listId")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         try {
             taskListRepository.deleteById(listId);
             return ResponseEntity.status(HttpStatus.OK).build();
@@ -194,11 +194,11 @@ public class ApiController {
             @PathVariable("listId") Long listId,
             @PathVariable("username") String username
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<TaskList> taskList = taskListRepository.findById(listId);
         Optional<User> user = userRepository.findByUsername(username);
 
         if (taskList.isPresent() && user.isPresent()) {
+            if (!hasAccess(hash, listId, "listId")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             TaskList tempTaskList = taskList.get();
             tempTaskList.getSharedWith().add(user.get());
             taskListRepository.save(tempTaskList);
@@ -218,7 +218,7 @@ public class ApiController {
             @PathVariable("listId") Long listId,
             @PathVariable("username") String username
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!hasAccess(hash, listId, "listId")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<TaskList> taskList = taskListRepository.findById(listId);
         Optional<User> user = userRepository.findByUsername(username);
 
@@ -242,7 +242,7 @@ public class ApiController {
             @PathVariable("listId") Long listId,
             @RequestBody Task task
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!hasAccess(hash, listId, "listId")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<TaskList> taskList = taskListRepository.findById(listId);
         if (taskList.isPresent()) {
             TaskList list1 = taskList.get();
@@ -260,7 +260,7 @@ public class ApiController {
             @RequestHeader("hash") String hash,
             @PathVariable("listId") Long listId
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!hasAccess(hash, listId, "listId")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         return ResponseEntity.status(HttpStatus.OK).body(taskRepository.findAllByTaskListId(listId));
     }
 
@@ -270,7 +270,7 @@ public class ApiController {
             @PathVariable("listId") Long listId,
             @PathVariable("taskId") Long taskId
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!hasAccess(hash, listId, "listId")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<Task> task = taskRepository.getTaskIfBelongsToList(listId, taskId);
         if (task.isPresent()) {
             taskRepository.deleteById(taskId);
@@ -287,7 +287,7 @@ public class ApiController {
             @PathVariable("taskId") Long taskId,
             @PathVariable boolean completed
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!hasAccess(hash, listId, "listId")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         Optional<Task> task = taskRepository.getTaskIfBelongsToList(listId, taskId);
         if (task.isPresent()) {
             Task tempTask = task.get();
@@ -312,9 +312,9 @@ public class ApiController {
             @PathVariable("listId") Long listId,
             @RequestBody TaskListResponse taskListResponse
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         if (listId.equals(taskListResponse.getId())) {
             if (taskListRepository.existsById(listId)) {
+                if (!hasAccess(hash, listId, "listId")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
                 taskListResponse.setUpdatedAt(System.currentTimeMillis());
                 taskListRepository.save(responseMapper.mapTaskList(taskListResponse));
                 return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -333,15 +333,11 @@ public class ApiController {
             @PathVariable("taskId") Long taskId,
             @RequestBody Task task
     ) {
-        if (validateHeader(hash)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!hasAccess(hash, listId, "listId")) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         if (taskId.equals(task.getId()) && taskRepository.getTaskIfBelongsToList(listId, taskId).isPresent()) {
-            if (taskRepository.existsById(listId)) {
-                task.setUpdatedAt(System.currentTimeMillis());
-                taskRepository.save(task);
-                return ResponseEntity.status(HttpStatus.CREATED).build();
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            }
+            task.setUpdatedAt(System.currentTimeMillis());
+            taskRepository.save(task);
+            return ResponseEntity.status(HttpStatus.CREATED).build();
         } else {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -354,7 +350,7 @@ public class ApiController {
             @RequestHeader("hash") String hash,
             @PathVariable("listId") Long listId
     ) {
-        if (validateHeader(hash)) {
+        if (!hasAccess(hash, listId, "listId")) {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             return;
         }
@@ -383,7 +379,7 @@ public class ApiController {
             @RequestHeader("hash") String hash,
             @PathVariable("username") String username
     ) {
-        if (validateHeader(hash)) {
+        if (!hasAccess(hash, username, "username")) {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             return;
         }
@@ -405,19 +401,44 @@ public class ApiController {
         }
     }
 
+    @PostMapping("/api/taskList/upload")
+    public ResponseEntity<String> uploadFile(
+            @RequestHeader("hash") String hash,
+            @RequestParam("file") MultipartFile file
+    ) {
+        try {
+            Optional<User> userByToken = userRepository.findUserByToken(hash);
+            if (!userByToken.isPresent())
+                throw new IllegalAccessException();
+            List<TaskList> parsedLists = fileParser.toTaskList(file, responseMapper.mapUserResponse(userByToken.get()));
+            taskListRepository.saveAll(parsedLists);
+            return ResponseEntity.status(HttpStatus.OK).body(String.format("File '%s', Processed {%s} records.", file.getName(), parsedLists.size()));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
     private void generateFile(Object object, String fileName, OutputStream outputStream) throws IOException {
         File tempFile = fileExport.exportTxt(fileName, object).toFile();
         FileInputStream fileInputStream = new FileInputStream(tempFile);
         IOUtils.copy(fileInputStream, outputStream);
         outputStream.close();
         fileInputStream.close();
-        logger.info(String.format("File '%s' %sdeleted from server.", fileName, tempFile.delete() ? "" : "not "));
+        logger.debug(String.format("File '%s' %sdeleted from server.", fileName, tempFile.delete() ? "" : "not "));
     }
 
-
-    private boolean validateHeader(String hash) {
-        if (userHash == null) userHash = userRepository.findActiveTokens();
-        return !userHash.contains(hash);
+    private boolean hasAccess(String hash, Object obj, String type) {
+        switch (type) {
+            case "listId":
+                return taskListRepository.hasListAccess(hash, (Long) obj) != 0;
+            case "userId":
+                return userRepository.hasUserAccess(hash, (Long) obj) != 0;
+            case "username":
+                return userRepository.hasUserAccess(hash, (String) obj) != 0;
+            default:
+                return false;
+        }
     }
 
 }
