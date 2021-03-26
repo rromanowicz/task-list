@@ -23,4 +23,22 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "SELECT U.* FROM 'user' u, hash_token ht , user_hash_tokens uht WHERE u.id=uht.user_id AND ht.id=uht.hash_tokens_id AND ht.token=?1", nativeQuery = true)
     Optional<User> findUserByToken(String token);
 
+    @Query(value = "" +
+            "SELECT EXISTS (" +
+            "SELECT 1 FROM 'user' u, user_hash_tokens uht, hash_token ht, user_roles ur, 'role' r \n" +
+            "WHERE u.id=uht.user_id AND  uht.hash_tokens_id=ht.id AND u.id=ur.user_id AND ur.roles_id=r.id\n" +
+            "AND (u.username=?2 AND ht.token=?1 OR r.'role'='ADMIN')" +
+            ")"
+            , nativeQuery = true)
+    Integer hasUserAccess(String hash, String username);
+
+    @Query(value = "" +
+            "SELECT EXISTS (" +
+            "SELECT 1 FROM 'user' u, user_hash_tokens uht, hash_token ht, user_roles ur, 'role' r \n" +
+            "WHERE u.id=uht.user_id AND  uht.hash_tokens_id=ht.id AND u.id=ur.user_id AND ur.roles_id=r.id\n" +
+            "AND (u.id=?2 AND ht.token=?1 OR r.'role'='ADMIN')" +
+            ")"
+            , nativeQuery = true)
+    Integer hasUserAccess(String hash, Long userId);
+
 }
